@@ -1,36 +1,19 @@
 cmake_minimum_required(VERSION 3.10)
-project(PGCCHIB)
+project(ProcessamentoGrafico)
 
-# Define o padrão do C++
 set(CMAKE_CXX_STANDARD 17)
-set(CMAKE_CXX_STANDARD_REQUIRED True)
 
-# Ativa o FetchContent
-include(FetchContent)
+# Adiciona GLFW
+find_package(glfw3 REQUIRED)
 
-# Configura o FetchContent para baixar e compilar GLFW automaticamente
-FetchContent_Declare(
-  glfw
-  GIT_REPOSITORY https://github.com/glfw/glfw.git
-  GIT_TAG 3.4  # Define a versão desejada da GLFW
-)
+# Adiciona OpenGL
+find_package(OpenGL REQUIRED)
 
-# Faz o download e compila a GLFW
-FetchContent_MakeAvailable(glfw)
+# Inclui diretórios
+include_directories(include)
 
-# Adiciona as pastas de cabeçalhos
-include_directories(${CMAKE_SOURCE_DIR}/include)
-include_directories(${CMAKE_SOURCE_DIR}/include/glad)
-include_directories(${CMAKE_SOURCE_DIR}/Common)
-include_directories(${CMAKE_SOURCE_DIR}/Dependencies/glm)  # GLM adicionada!
+# Arquivos do projeto
+add_executable(processamento_grafico src/main.cpp src/glad.c)
 
-# Lista de exercícios (por enquanto só tem o HelloTriangle)
-set(EXERCISES 
-    HelloTriangle
-)
-
-# Loop para criar um executável para cada exercício
-foreach(EXERCISE ${EXERCISES})
-    add_executable(${EXERCISE} src/${EXERCISE}.cpp Common/glad.c)
-    target_link_libraries(${EXERCISE} glfw opengl32)
-endforeach()
+# Liga com as bibliotecas
+target_link_libraries(processamento_g glfw OpenGL::GL)
