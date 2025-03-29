@@ -1,25 +1,9 @@
-/*
- * Hello Triangle - Código adaptado de:
- *   - https://learnopengl.com/#!Getting-started/Hello-Triangle
- *   - https://antongerdelan.net/opengl/glcontext2.html
+/* Hello Triangle - código adaptado de https://learnopengl.com/#!Getting-started/Hello-Triangle
  *
- * Adaptado por: Rossana Baptista Queiroz
- *
- * Disciplinas:
- *   - Processamento Gráfico (Ciência da Computação - Híbrido)
- *   - Processamento Gráfico: Fundamentos (Ciência da Computação - Presencial)
- *   - Fundamentos de Computação Gráfica (Jogos Digitais)
- *
- * Descrição:
- *   Este código é o "Olá Mundo" da Computação Gráfica, utilizando OpenGL Moderna.
- *   No pipeline programável, o desenvolvedor pode implementar as etapas de
- *   Processamento de Geometria e Processamento de Pixel utilizando shaders.
- *   Um programa de shader precisa ter, obrigatoriamente, um Vertex Shader e um Fragment Shader,
- *   enquanto outros shaders, como o de geometria, são opcionais.
- *
- * Histórico:
- *   - Versão inicial: 07/04/2017
- *   - Última atualização: 18/03/2025
+ * Adaptado por Rossana Baptista Queiroz
+ * para a disciplina de Processamento Gráfico - Unisinos
+ * Versão inicial: 7/4/2017
+ * Última atualização em 13/08/2024
  *
  */
 
@@ -35,6 +19,15 @@ using namespace std;
 // GLFW
 #include <GLFW/glfw3.h>
 
+// GLM
+#include <glm/glm.hpp>
+#include <glm/gtc/matrix_transform.hpp>
+#include <glm/gtc/type_ptr.hpp>
+
+using namespace glm;
+
+#include <cmath>
+
 // Protótipo da função de callback de teclado
 void key_callback(GLFWwindow *window, int key, int scancode, int action, int mode);
 
@@ -46,25 +39,24 @@ int setupGeometry();
 const GLuint WIDTH = 800, HEIGHT = 600;
 
 // Código fonte do Vertex Shader (em GLSL): ainda hardcoded
-const GLchar *vertexShaderSource = R"(
- #version 400
- layout (location = 0) in vec3 position;
- void main()
- {
-	 gl_Position = vec4(position.x, position.y, position.z, 1.0);
- }
- )";
+const GLchar *vertexShaderSource = "#version 400\n"
+								   "layout (location = 0) in vec3 position;\n"
+								   "uniform mat4 projection;\n"
+								   "uniform mat4 model;\n"
+								   "void main()\n"
+								   "{\n"
+								   //...pode ter mais linhas de código aqui!
+								   "gl_Position = projection * model * vec4(position.x, position.y, position.z, 1.0);\n"
+								   "}\0";
 
 // Código fonte do Fragment Shader (em GLSL): ainda hardcoded
-const GLchar *fragmentShaderSource = R"(
- #version 400
- uniform vec4 inputColor;
- out vec4 color;
- void main()
- {
-	 color = inputColor;
- }
- )";
+const GLchar *fragmentShaderSource = "#version 400\n"
+									 "uniform vec4 inputColor;\n"
+									 "out vec4 color;\n"
+									 "void main()\n"
+									 "{\n"
+									 "color = inputColor;\n"
+									 "}\n\0";
 
 // Função MAIN
 int main()
@@ -76,23 +68,14 @@ int main()
 	// Você deve adaptar para a versão do OpenGL suportada por sua placa
 	// Sugestão: comente essas linhas de código para desobrir a versão e
 	// depois atualize (por exemplo: 4.5 com 4 e 5)
+
 	glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 4);
 	glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 1);
-	glfwWindowHint(GLFW_OPENGL_FORWARD_COMPAT, GL_TRUE);
 	glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
 	glfwWindowHint(GLFW_OPENGL_FORWARD_COMPAT, GL_TRUE);
 
-	// Ativa a suavização de serrilhado (MSAA) com 8 amostras por pixel
-	glfwWindowHint(GLFW_SAMPLES, 8);
-
 	// Criação da janela GLFW
 	GLFWwindow *window = glfwCreateWindow(WIDTH, HEIGHT, "Ola Triangulo! -- Rossana", nullptr, nullptr);
-	if (!window)
-	{
-		std::cerr << "Falha ao criar a janela GLFW" << std::endl;
-		glfwTerminate();
-		return -1;
-	}
 	glfwMakeContextCurrent(window);
 
 	// Fazendo o registro da função de callback para a janela GLFW
@@ -101,8 +84,7 @@ int main()
 	// GLAD: carrega todos os ponteiros d funções da OpenGL
 	if (!gladLoadGLLoader((GLADloadproc)glfwGetProcAddress))
 	{
-		std::cerr << "Falha ao inicializar GLAD" << std::endl;
-		return -1;
+		std::cout << "Failed to initialize GLAD" << std::endl;
 	}
 
 	// Obtendo as informações de versão
@@ -122,42 +104,42 @@ int main()
 	// Gerando um buffer simples, com a geometria de um triângulo
 	GLuint VAO = setupGeometry();
 
+	glUseProgram(shaderID);
+
 	// Enviando a cor desejada (vec4) para o fragment shader
 	// Utilizamos a variáveis do tipo uniform em GLSL para armazenar esse tipo de info
 	// que não está nos buffers
 	GLint colorLoc = glGetUniformLocation(shaderID, "inputColor");
 
-	glUseProgram(shaderID); // Reseta o estado do shader para evitar problemas futuros
+	// Matriz de projeção paralela ortográfica
+	// mat4 projection = ortho(-10.0, 10.0, -10.0, 10.0, -1.0, 1.0);
+	mat4 projection = ortho(0.0, 800.0, 0.0, 600.0, -1.0, 1.0);
+	glUniformMatrix4fv(glGetUniformLocation(shaderID, "projection"), 1, GL_FALSE, value_ptr(projection));
 
-	double prev_s = glfwGetTime();	// Define o "tempo anterior" inicial.
-	double title_countdown_s = 0.1; // Intervalo para atualizar o título da janela com o FPS.
+	// Matriz de modelo: transformações na geometria (objeto)
+	mat4 model = mat4(1); // matriz identidade
+	// Translação
+	model = translate(model, vec3(400.0, 300.0, 0.0));
+
+	model = rotate(model, radians(45.0f), vec3(0.0, 0.0, 1.0));
+	// Escala
+	model = scale(model, vec3(300.0, 300.0, 1.0));
+	glUniformMatrix4fv(glGetUniformLocation(shaderID, "model"), 1, GL_FALSE, value_ptr(model));
 
 	// Loop da aplicação - "game loop"
 	while (!glfwWindowShouldClose(window))
 	{
-		// Este trecho de código é totalmente opcional: calcula e mostra a contagem do FPS na barra de título
-		{
-			double curr_s = glfwGetTime();		// Obtém o tempo atual.
-			double elapsed_s = curr_s - prev_s; // Calcula o tempo decorrido desde o último frame.
-			prev_s = curr_s;					// Atualiza o "tempo anterior" para o próximo frame.
-
-			// Exibe o FPS, mas não a cada frame, para evitar oscilações excessivas.
-			title_countdown_s -= elapsed_s;
-			if (title_countdown_s <= 0.0 && elapsed_s > 0.0)
-			{
-				double fps = 1.0 / elapsed_s; // Calcula o FPS com base no tempo decorrido.
-
-				// Cria uma string e define o FPS como título da janela.
-				char tmp[256];
-				sprintf(tmp, "Ola Triangulo! -- Rossana\tFPS %.2lf", fps);
-				glfwSetWindowTitle(window, tmp);
-
-				title_countdown_s = 0.1; // Reinicia o temporizador para atualizar o título periodicamente.
-			}
-		}
-
 		// Checa se houveram eventos de input (key pressed, mouse moved etc.) e chama as funções de callback correspondentes
 		glfwPollEvents();
+
+		// Matriz de modelo: transformações na geometria (objeto)
+		model = mat4(1); // matriz identidade
+		// Translação
+		model = translate(model, vec3(400.0, 300.0, 0.0));
+		model = rotate(model, (float)glfwGetTime(), vec3(0.0, 0.0, 1.0));
+		// Escala
+		model = scale(model, vec3(abs(cos(glfwGetTime())) * 300.0, abs(cos(glfwGetTime())) * 300.0, 1.0));
+		glUniformMatrix4fv(glGetUniformLocation(shaderID, "model"), 1, GL_FALSE, value_ptr(model));
 
 		// Limpa o buffer de cor
 		glClearColor(0.0f, 0.0f, 0.0f, 1.0f); // cor de fundo
@@ -168,13 +150,21 @@ int main()
 
 		glBindVertexArray(VAO); // Conectando ao buffer de geometria
 
-		glUniform4f(colorLoc, 0.0f, 0.0f, 1.0f, 1.0f); // enviando cor para variável uniform inputColor
-
+		glUniform4f(colorLoc, 0.0f, 0.0f, abs(cos(glfwGetTime())), 1.0f); // enviando cor para variável uniform inputColor
 		// Chamada de desenho - drawcall
 		// Poligono Preenchido - GL_TRIANGLES
 		glDrawArrays(GL_TRIANGLES, 0, 3);
 
-		// glBindVertexArray(0); // Desnecessário aqui, pois não há múltiplos VAOs
+		// Desenho com contorno (linhas)
+		// glUniform4f(colorLoc, 1.0f, 0.0f, 1.0f, 1.0f); //enviando cor para variável uniform inputColor
+		// glDrawArrays(GL_LINE_LOOP, 0, 3); //Desenha T0
+		// glDrawArrays(GL_LINE_LOOP, 3, 3); //Desenha T1
+
+		// Desenho só dos pontos (vértices)
+		// glUniform4f(colorLoc, 1.0f, 1.0f, 0.0f, 1.0f); //enviando cor para variável uniform inputColor
+		// glDrawArrays(GL_POINTS, 0, 6);
+
+		glBindVertexArray(0); // Desconectando o buffer de geometria
 
 		// Troca os buffers da tela
 		glfwSwapBuffers(window);
@@ -195,7 +185,7 @@ void key_callback(GLFWwindow *window, int key, int scancode, int action, int mod
 		glfwSetWindowShouldClose(window, GL_TRUE);
 }
 
-// Esta função está bastante hardcoded - objetivo é compilar e "buildar" um programa de
+// Esta função está basntante hardcoded - objetivo é compilar e "buildar" um programa de
 //  shader simples e único neste exemplo de código
 //  O código fonte do vertex e fragment shader está nos arrays vertexShaderSource e
 //  fragmentShader source no iniçio deste arquivo
@@ -259,13 +249,11 @@ int setupGeometry()
 	// Cada atributo do vértice (coordenada, cores, coordenadas de textura, normal, etc)
 	// Pode ser arazenado em um VBO único ou em VBOs separados
 	GLfloat vertices[] = {
-		// x   y     z
+		// x    y    z
 		// T0
 		-0.5, -0.5, 0.0, // v0
 		0.5, -0.5, 0.0,	 // v1
 		0.0, 0.5, 0.0,	 // v2
-						 // T1
-
 	};
 
 	GLuint VBO, VAO;
