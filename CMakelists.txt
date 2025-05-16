@@ -37,6 +37,7 @@ set(EXERCISES
     HelloTriangle
     HelloTransform
     M2Parte1
+    M2Parte2
 )
 
 add_compile_options(-Wno-pragmas)
