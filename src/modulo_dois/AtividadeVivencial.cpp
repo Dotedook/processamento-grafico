@@ -12,6 +12,8 @@
 using namespace std;
 using namespace glm;
 
+// Trabalho feito por - Eduardo Kuhn, Adriano Fantinelli, Bruna Mendes
+
 void key_callback(GLFWwindow *window, int key, int scancode, int action, int mode);
 void mouse_button_callback(GLFWwindow *window, int button, int action, int mods);
 int setupShader();
