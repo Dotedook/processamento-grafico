@@ -38,6 +38,7 @@ set(EXERCISES
     HelloTransform
     M2Parte1
     M2Parte2
+    AtividadeVivencial
 )
 
 add_compile_options(-Wno-pragmas)
