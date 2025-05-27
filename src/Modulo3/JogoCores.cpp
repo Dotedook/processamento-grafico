@@ -22,9 +22,8 @@ int setupGeometry();
 int eliminarSimilares(float tolerancia);
 void inicializaJogo();
 
-// README -> Comentar sobre as constantes
 const GLuint WIDTH = 800, HEIGHT = 600;
-const GLuint QUAD_WIDTH = 50, QUAD_HEIGHT = 50;
+const GLuint QUAD_WIDTH = 5, QUAD_HEIGHT = 5;
 const GLuint ROWS = HEIGHT / QUAD_HEIGHT, COLS = WIDTH / QUAD_WIDTH;
 
 const float dMax = sqrt(3.0);
@@ -50,7 +49,6 @@ void main()
 }
 )";
 
-// README -> Comentar sobre essa struct
 struct Quad
 {
     vec3 position;
@@ -60,6 +58,7 @@ struct Quad
 };
 
 int iSelected = -1;
+
 int points = 0;
 int turn = 1;
 
@@ -127,7 +126,6 @@ int main()
             turn++;
         }
 
-        // README -> Comentar sobre o desenho dos quadrados
         bool allEliminated = true;
         for (int i = 0; i < ROWS; i++)
         {
@@ -222,7 +220,6 @@ int setupShader()
     return shaderProgram;
 }
 
-// README -> Comentar sobre o callback do mouse
 void mouse_button_callback(GLFWwindow *window, int button, int action, int mods)
 {
     if (button == GLFW_MOUSE_BUTTON_LEFT && action == GLFW_PRESS)
@@ -237,7 +234,6 @@ void mouse_button_callback(GLFWwindow *window, int button, int action, int mods)
     }
 }
 
-// README -> Comentar sobre a criação do quadrado
 GLuint createQuad()
 {
     GLuint VAO;
@@ -266,7 +262,6 @@ GLuint createQuad()
     return VAO;
 }
 
-// README -> Comentar sobre a eliminação de quadrados similares
 int eliminarSimilares(float tolerancia)
 {
     int eliminatedCount = 0;
@@ -297,7 +292,6 @@ int eliminarSimilares(float tolerancia)
     return eliminatedCount;
 }
 
-// README -> Comentar sobre a inicialização do grid
 void inicializaJogo()
 {
     iSelected = -1;
