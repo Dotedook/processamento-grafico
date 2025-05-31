@@ -50,6 +50,7 @@ set(EXERCISES
     Modulo2/M2Parte1
     Modulo2/M2Parte2
     Modulo3/JogoCores
+    Modulo4/Parallax
 )
 
 add_compile_options(-Wno-pragmas)
