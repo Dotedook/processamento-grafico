@@ -52,6 +52,7 @@ set(EXERCISES
     Modulo3/JogoCores
     Modulo4/Parallax
     Modulo4/DesafioTexturas
+    Modulo5/DesafioAnimacao
 )
 
 add_compile_options(-Wno-pragmas)
